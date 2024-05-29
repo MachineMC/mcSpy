@@ -1,0 +1,5 @@
+name: mcSpy
+version: '$version'
+main: org.machinemc.mcspy.mcSpy
+description: Plugin for Minecraft data generation
+api-version: '1.20'

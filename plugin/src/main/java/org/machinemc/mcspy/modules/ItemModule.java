@@ -1,0 +1,102 @@
+package org.machinemc.mcspy.modules;
+
+import lombok.extern.slf4j.Slf4j;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import org.machinemc.mcspy.RegistryDataModule;
+import org.machinemc.mcspy.util.ItemComponentUtil;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Module for items.
+ */
+@Slf4j(topic = "mcSpy")
+public class ItemModule extends RegistryDataModule<Item> {
+
+    public ItemModule() {
+        super("item", BuiltInRegistries.ITEM);
+    }
+
+    @Override
+    public Map<String, ?> getProperties(Item element) {
+        Map<String, Object> properties = new LinkedHashMap<>();
+
+        ItemStack itemStack = element.getDefaultInstance();
+
+        if (element instanceof BlockItem blockItem) {
+            ResourceLocation block = BuiltInRegistries.BLOCK.getKey(blockItem.getBlock());
+            properties.put("block", block.toString());
+        }
+
+        components: {
+            Map<String, Object> components = new LinkedHashMap<>();
+            DataComponentMap componentMap = element.components();
+            componentMap.forEach(component -> {
+                ResourceLocation location = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(component.type());
+                if (location == null) {
+                    log.warn("Missing {} item component for item {}", component.type(), getKey(element));
+                    return;
+                }
+                Map<String, ?> value = ItemComponentUtil.deconstructValue(component);
+                if (value == null) return;
+                components.put(location.toString(), value);
+            });
+            if (!components.isEmpty())
+                properties.put("components", components);
+        }
+
+        properties.put("description", element.getDescriptionId());
+
+        if (element.hasCraftingRemainingItem())
+            properties.put("craftingRemainingItem", getKey(element.getCraftingRemainingItem()).toString());
+
+        if (element.isComplex())
+            properties.put("complex", element.isComplex());
+
+        if (element.getUseAnimation(itemStack) != UseAnim.NONE)
+            properties.put("useAnimation", element.getUseAnimation(itemStack).name().toLowerCase());
+
+        if (element.isFoil(itemStack))
+            properties.put("enchanted", element.isFoil(itemStack));
+
+        if (element.isEnchantable(itemStack))
+            properties.put("enchantable", element.isEnchantable(itemStack));
+
+        if (element.getEnchantmentValue() != 0)
+            properties.put("enchantmentValue", element.getEnchantmentValue());
+
+        if (!element.getDrinkingSound().getLocation().toString().equals("minecraft:entity.generic.drink"))
+            properties.put("drinkingSound", element.getDrinkingSound().getLocation().toString());
+
+        if (!element.getEatingSound().getLocation().toString().equals("minecraft:entity.generic.eat"))
+            properties.put("eatingSound", element.getEatingSound().getLocation().toString());
+
+        if (!element.getBreakingSound().getLocation().toString().equals("minecraft:entity.item.break"))
+            properties.put("breakingSound", element.getBreakingSound().getLocation().toString());
+
+        features: {
+            List<String> flags = new ArrayList<>();
+            FeatureFlagSet set = element.requiredFeatures();
+            FeatureFlags.REGISTRY.names.forEach((location, flag) -> {
+                if (flag == FeatureFlags.VANILLA) return;
+                if (set.contains(flag)) flags.add(location.toString());
+            });
+            if (!flags.isEmpty())
+                properties.put("experiments", flags);
+        }
+
+        return properties;
+    }
+
+}

@@ -1,0 +1,8 @@
+/.gradle/
+# Project exclude paths
+/build-logic/.gradle/
+/build-logic/build/
+/build-logic/build/classes/kotlin/main/
+# Project exclude paths
+/plugin/build/
+/plugin/build/classes/java/main/
