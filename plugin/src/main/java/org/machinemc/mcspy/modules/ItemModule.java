@@ -4,18 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.flag.FeatureFlagSet;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import org.machinemc.mcspy.RegistryDataModule;
+import org.machinemc.mcspy.util.CommonPropertiesUtil;
 import org.machinemc.mcspy.util.ItemComponentUtil;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -85,16 +82,7 @@ public class ItemModule extends RegistryDataModule<Item> {
         if (!element.getBreakingSound().getLocation().toString().equals("minecraft:entity.item.break"))
             properties.put("breakingSound", element.getBreakingSound().getLocation().toString());
 
-        features: {
-            List<String> flags = new ArrayList<>();
-            FeatureFlagSet set = element.requiredFeatures();
-            FeatureFlags.REGISTRY.names.forEach((location, flag) -> {
-                if (flag == FeatureFlags.VANILLA) return;
-                if (set.contains(flag)) flags.add(location.toString());
-            });
-            if (!flags.isEmpty())
-                properties.put("experiments", flags);
-        }
+        CommonPropertiesUtil.writeFeatureFlags(element.requiredFeatures(), properties);
 
         return properties;
     }

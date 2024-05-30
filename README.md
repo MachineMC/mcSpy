@@ -15,6 +15,7 @@
 mcSpy is a Paper plugin designed to generate data from a Minecraft server for the MachineMC platform.
 
 Supported registries:
+* `minecraft:block`
 * `minecraft:item`
 
 ### License
