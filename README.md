@@ -18,5 +18,8 @@ Supported registries:
 * `minecraft:block`
 * `minecraft:item`
 
+Other data generators (data collected from other sources than built-in registries):
+* BlockState
+
 ### License
 mcSpy is free software licensed under the [MIT license](LICENSE).
