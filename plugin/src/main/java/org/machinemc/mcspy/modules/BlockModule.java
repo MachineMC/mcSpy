@@ -2,9 +2,6 @@ package org.machinemc.mcspy.modules;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.PushReaction;
 import org.machinemc.mcspy.RegistryDataModule;
 import org.machinemc.mcspy.util.CommonPropertiesUtil;
 
@@ -42,55 +39,6 @@ public class BlockModule extends RegistryDataModule<Block> {
 
         if (element.getJumpFactor() != 1)
             properties.put("jumpFactor", element.getJumpFactor());
-
-        BlockState state = element.defaultBlockState();
-
-        if (state.getLightEmission() != 0)
-            properties.put("lightEmission", state.getLightEmission());
-
-        if (state.isAir())
-            properties.put("air", state.isAir());
-
-        if (state.ignitedByLava())
-            properties.put("ignitedByLava", state.ignitedByLava());
-
-
-        properties.put("destroySpeed", state.destroySpeed);
-
-        if (state.getPistonPushReaction() != PushReaction.NORMAL)
-            properties.put("pushReaction", state.getPistonPushReaction().name().toLowerCase());
-
-        properties.put("mapColor", "#" + Integer.toString(state.getMapColor(null, null).col, 16));
-
-        if (state.requiresCorrectToolForDrops())
-            properties.put("requiresCorrectToolForDrops", state.requiresCorrectToolForDrops());
-
-        if (!state.canOcclude())
-            properties.put("isOccluding", state.canOcclude());
-
-        if (!state.shouldSpawnTerrainParticles())
-            properties.put("spawnTerrainParticles", state.shouldSpawnTerrainParticles());
-
-        properties.put("instrument", state.instrument().getSerializedName());
-
-        if (state.canBeReplaced())
-            properties.put("replaceable", state.canBeReplaced());
-
-        if (state.isRandomlyTicking())
-            properties.put("isRandomlyTicking", state.isRandomlyTicking());
-
-        Map<String, Object> soundGroupMap = new LinkedHashMap<>();
-        SoundType soundGroup = state.getSoundType();
-        if (soundGroup.getVolume() != 1)
-            soundGroupMap.put("volume", soundGroup.getVolume());
-        if (soundGroup.getPitch() != 1)
-            soundGroupMap.put("pitch", soundGroup.getPitch());
-        soundGroupMap.put("breakSound", soundGroup.getBreakSound().getLocation().toString());
-        soundGroupMap.put("stepSound", soundGroup.getStepSound().getLocation().toString());
-        soundGroupMap.put("placeSound", soundGroup.getPlaceSound().getLocation().toString());
-        soundGroupMap.put("hitSound", soundGroup.getHitSound().getLocation().toString());
-        soundGroupMap.put("fallSound", soundGroup.getFallSound().getLocation().toString());
-        properties.put("soundGroup", soundGroupMap);
 
         CommonPropertiesUtil.writeFeatureFlags(element.requiredFeatures(), properties);
 
