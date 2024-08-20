@@ -9,8 +9,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import org.machinemc.mcspy.RegistryDataModule;
+import org.machinemc.mcspy.util.SerializationUtils;
 import org.machinemc.mcspy.util.CommonPropertiesUtil;
-import org.machinemc.mcspy.util.ItemComponentUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,22 +36,9 @@ public class ItemModule extends RegistryDataModule<Item> {
             properties.put("block", block.toString());
         }
 
-        components: {
-            Map<String, Object> components = new LinkedHashMap<>();
-            DataComponentMap componentMap = element.components();
-            componentMap.forEach(component -> {
-                ResourceLocation location = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(component.type());
-                if (location == null) {
-                    log.warn("Missing {} item component for item {}", component.type(), getKey(element));
-                    return;
-                }
-                Map<String, ?> value = ItemComponentUtil.deconstructValue(component);
-                if (value == null) return;
-                components.put(location.toString(), value);
-            });
-            if (!components.isEmpty())
-                properties.put("components", components);
-        }
+        Map<String, ?> components = SerializationUtils.createMap(element.components(), map -> DataComponentMap.CODEC);
+        if (components != null && !components.isEmpty())
+            properties.put("components", components);
 
         properties.put("description", element.getDescriptionId());
 
