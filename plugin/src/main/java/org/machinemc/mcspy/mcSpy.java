@@ -78,7 +78,7 @@ public final class mcSpy extends JavaPlugin {
             if (module.isIndexed())
                 properties.put("id", module.getIndex(element));
             Map<String, ?> extra = module.getProperties(element);
-            if (!extra.isEmpty())
+            if (extra != null && !extra.isEmpty())
                 properties.put("properties", extra);
             elements.put(module.getKey(element).toString(), properties);
         });
