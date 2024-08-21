@@ -21,6 +21,7 @@ Supported registries:
 
 Other data generators (data collected from other sources than built-in registries):
 * BlockState
+* KnownPack
 
 ### License
 mcSpy is free software licensed under the [MIT license](LICENSE).

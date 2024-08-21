@@ -1,12 +1,14 @@
 package org.machinemc.mcspy;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.packs.repository.KnownPack;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -18,9 +20,7 @@ import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Main class of the plugin.
@@ -54,10 +54,25 @@ public final class mcSpy extends JavaPlugin {
                 log.error("Failed to extract module '{}'", module.getName(), exception);
             }
         });
+
+        File packDir = new File(dataDir, "known_packs");
+        if (!packDir.exists() && !packDir.mkdirs())
+            throw new RuntimeException("Failed to create the known packs directory");
+
+        log.info("Generating information about server's known packs...");
+        List<KnownPack> list = MinecraftServer.getServer().getResourceManager().listPacks()
+                .flatMap(pack -> pack.location().knownPackInfo().stream())
+                .toList();
+        list.forEach(pack -> {
+            try {
+                extractKnownPack(pack, packDir);
+            } catch (IOException exception) {
+                log.error("Failed to extract pack {}", pack, exception);
+            }
+        });
     }
 
     private void extract(DataModule<Object> module, File directory) throws IOException {
-
         log.info("Extracting data for module '{}'", module.getName());
 
         JsonObject json = new JsonObject();
@@ -97,6 +112,47 @@ public final class mcSpy extends JavaPlugin {
         writer.close();
 
         log.info("Finished generating data for module '{}' with {} entries", module.getName(), elements.size());
+    }
+
+    public void extractKnownPack(KnownPack pack, File directory) throws IOException {
+        log.info("Extracting data for known pack '{}'", pack);
+
+        List<KnownPackInfo> registries = MinecraftServer.getServer().registryAccess().registries()
+                .map(RegistryAccess.RegistryEntry::value)
+                .map(registry -> {
+                    List<? extends ResourceKey<?>> keys = registry.registryKeySet().stream()
+                            .filter(key -> {
+                                if (registry.registrationInfo(key).isEmpty()) return false;
+                                KnownPack source = registry.registrationInfo(key).get().knownPackInfo().orElse(null);
+                                return pack.equals(source);
+                            })
+                            .toList();
+                    if (keys.isEmpty()) return null;
+                    return new KnownPackInfo(registry.key().location(), keys.stream().map(ResourceKey::location).toList());
+                })
+                .filter(Objects::nonNull)
+                .toList();
+
+        JsonObject json = new JsonObject();
+
+        for (KnownPackInfo info : registries) {
+            JsonArray array = new JsonArray();
+            info.entries.stream().map(ResourceLocation::toString).forEach(array::add);
+            json.add(info.registry.toString(), array);
+        }
+
+        File target = new File(directory, pack.namespace() + "_" + pack.id() + ".json");
+        if (target.exists() && !target.delete())
+            throw new RuntimeException("Failed to delete file " + target.getCanonicalPath());
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(target));
+        writer.write(gson.toJson(json));
+        writer.close();
+
+        log.info("Finished generating data for known pack '{}'", pack);
+    }
+
+    public record KnownPackInfo(ResourceLocation registry, List<ResourceLocation> entries) {
     }
 
 }
